@@ -148,7 +148,7 @@ int convRelToRela(scn_t *scns, seg_t *segs, const Elf32_Sym *symtab,
 					+ rel->r_offset - dstScn->shdr.sh_addr);
 			} else {
 				addend = sym->st_value;
-				if (type == R_ARM_CALL)
+				if (type == R_ARM_CALL || type == R_ARM_JUMP24)
 					addend -= 8;
 			}
 
