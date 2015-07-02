@@ -73,6 +73,7 @@ int loadScn(FILE *fp, scn_t *scn, const char *str)
 
 	if (fread(scn->content, scn->orgSize, 1, fp) <= 0) {
 		free(scn->content);
+		scn->content = NULL;
 
 		if (feof(fp)) {
 			fprintf(stderr, "%s: Unexpected EOF\n", str);
