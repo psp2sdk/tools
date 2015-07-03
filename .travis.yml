@@ -29,6 +29,7 @@ script:
 
  - ./configure $FLAGS --host=x86_64-w64-mingw32
  - make install -j4
+ - cp /usr/x86_64-w64-mingw32/bin/libeay32.dll $PREFIX/bin
  - (cd $PREFIX; zip -0rq ../psp2-tools-$REV-x86_64-w64-mingw32.zip *)
 
 after_success:
