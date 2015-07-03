@@ -178,24 +178,44 @@ int getSceScns(sceScns_t *sceScns, scn_t *scns, Elf32_Half shnum,
 
 int updateSceScnsSize(sceScns_t *scns)
 {
-	Elf32_Word headNum, stubNum;
+	Elf32_Word headNum, fstubNum, vstubNum, relPerHead;
 
 	if (scns == NULL)
 		return EINVAL;
 
-	/* mark->sh_size == (the number of the heads) * 24 + (the number of the stubs) * 20
-	   fnid->sh_size == (the number of stubs) * 4 */
-	stubNum = scns->fstub->shdr.sh_size / 4;
+	// name
+	relPerHead = 1;
+
+	if (scns->fstub == NULL || scns->relFstub == NULL)
+		fstubNum = 0;
+	else {
+		fstubNum = scns->fstub->shdr.sh_size / 4;
+
+		scns->relFstub->shdr.sh_type = SHT_INTERNAL;
+		scns->relFstub->shdr.sh_size = fstubNum * sizeof(Psp2_Rela);
+
+		// NID table and function stub table
+		relPerHead += 2;
+	}
+
+	if (scns->vstub == NULL || scns->relVstub == NULL)
+		vstubNum = 0;
+	else {
+		vstubNum = scns->vstub->shdr.sh_size / 4;
+
+		scns->relVstub->shdr.sh_type = SHT_INTERNAL;
+		scns->relVstub->shdr.sh_size = vstubNum * sizeof(Psp2_Rela);
+
+		// NID table and function stub table
+		relPerHead += 2;
+	}
+
 	headNum = (scns->mark->shdr.sh_size
-		- stubNum * sizeof(sce_libgen_mark_stub))
+		- (fstubNum + vstubNum) * sizeof(sce_libgen_mark_stub))
 			/ sizeof(sce_libgen_mark_head);
 
-	scns->relFstub->shdr.sh_type = SHT_INTERNAL;
-	scns->relFstub->shdr.sh_size = stubNum * sizeof(Psp2_Rela);
-
 	scns->relStub->shdr.sh_type = SHT_INTERNAL;
-	// name, function NID table, and function stub table
-	scns->relStub->shdr.sh_size = headNum * 3 * sizeof(Psp2_Rela);
+	scns->relStub->shdr.sh_size = headNum * relPerHead * sizeof(Psp2_Rela);
 	scns->stub->shdr.sh_size = headNum * sizeof(sceLib_stub);
 
 	return 0;
