@@ -39,5 +39,5 @@ after_success:
 env:
  global:
   - PREFIX="$PWD/dist"
-  - FLAGS="-q --enable-silent-rules --prefix=$PREFIX"
+  - FLAGS="-q --prefix=$PREFIX"
   - secure: "nNMKnoqKtCYgVJu4Wlp+k62q41G0RhCcEK2srDssFtEW5kSeThHttEJ7gTLUkd4jBNYQiFAfd8fg2oHfotgq7pxSqBP3B1iLgQMNvO/6IbvxwymWJuzVWl4t/7bagKWt/Tt2Tg5vvAWliFQwXJIq0uTJi1N/x4KQmGrRo8nfBaefBiBwQovOIYZIHokRrvDUv63DmkHeDdh2OGDDAjdoh4gWc/qrR63WMTyKst77ni4cBc4Z7+ElkxV7wVbTBigng+60F+1t3h/koPiQzljt7P4vK2OjLiU+bXEZXq9SoRA1IYE9HFByn7bDCc7iCnELHRWiN4oIuPSibsIJVjM/Aj6LVG3mEvHSu1u0mBluFwxlJkqJAAziHRIqEeV51bmTz8Y1DAIIf32hP4Bojn7Fj5UVW407dn/JQo/v+in2IqX5VJMNIBQsp1Deo2eU/SnjE5X2m1blDp0IFC4/lz1Zbnq9qb0/Nb9Tmb0dm1T12CZvUBu0IvQy/JTFUQ7xq/UM+MGddwxtqp1IkzgYqHbI+Zw/CpcoZmyfmzrJ65do7noIA+/KOhT09peV7Syta3yzIPXZ1jWZEbc1A9oviaFzDRyYJfmO8RYx2xW0hS/z2VONOWhR6NEaMJ+wxnjpG3BMMqRKKmmEHLuZ1/fKMLtyAj+Yzd0Sj5em6eh/blZ8+nw="
