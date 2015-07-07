@@ -89,6 +89,8 @@ int findSyslib(syslib_t *syslib, FILE *fp, scn_t *scns, Elf32_Half shnum,
 		- scn->shdr.sh_addr);
 
 	// Resolve
+	syslib->start = 0;
+	syslib->stop = 0;
 	for (i = 0; i < ((Elf32_Half *)ent->content)[3]; i++) {
 		if (nids[i] == 0x935CD196)
 			p = &syslib->start;
@@ -137,9 +139,8 @@ int updateModinfo(FILE *fp, const scn_t *scns, Elf32_Half shnum,
 	info->impTop = sceScns->stub->shdr.sh_addr - base;
 	info->impBtm = info->impTop + sceScns->stub->shdr.sh_size;
 
-
-	info->start = syslib->start - base;
-	info->stop = syslib->stop - base;
+	info->start = syslib->start == 0 ? 0 : syslib->start - base;
+	info->stop = syslib->stop == 0 ? 0 : syslib->stop - base;
 
 	sp = findScnByType(scns, shnum, SHT_ARM_EXIDX, NULL);
 	if (sp != NULL) {
