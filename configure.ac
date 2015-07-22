@@ -36,5 +36,6 @@ AC_C_BIGENDIAN(AC_MSG_ERROR(bigendian host not supported.))
 
 # Checks for a library function.
 AC_CHECK_LIB(crypto, SHA1, , AC_MSG_ERROR(SHA1 not supported by libcrypto.))
+AC_CHECK_LIB(xml2, xmlFree, , AC_MSG_ERROR(valid libxml2 not found.))
 
-AC_OUTPUT(Makefile psp2-fixup/Makefile)
+AC_OUTPUT(Makefile psp2-fixup/Makefile sfx2sfo/Makefile)

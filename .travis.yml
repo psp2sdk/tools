@@ -12,7 +12,7 @@ before_install:
 
  - sudo add-apt-repository -y ppa:win-cross-dev/win-cross
  - sudo apt-get update -qq -y
- - sudo apt-get install -qq -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 libssl-dev mingw64-openssl
+ - sudo apt-get install -qq -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 libssl-dev libxml2-dev mingw64-openssl mingw64-libxml2
 
 script:
  - export REV=$(git describe --always)
@@ -21,15 +21,18 @@ script:
  - automake --add-missing
  - autoconf
 
- - ./configure $FLAGS
+ - ./configure $FLAGS CFLAGS=-I/usr/include/libxml2
  - make install -j4
  - make clean
  - (cd $PREFIX; tar -c * -f ../psp2-tools-$REV-amd64-pc-linux-gnu.tar)
  - rm -Rf $PREFIX
 
- - ./configure $FLAGS --host=x86_64-w64-mingw32
+ - ./configure $FLAGS --host=x86_64-w64-mingw32 CFLAGS=-I/usr/x86_64-w64-mingw32/include/libxml2
  - make install -j4
  - cp /usr/x86_64-w64-mingw32/bin/libeay32.dll $PREFIX/bin
+ - cp /usr/x86_64-w64-mingw32/bin/libxml2-2.dll $PREFIX/bin
+ - cp /usr/x86_64-w64-mingw32/bin/libiconv-2.dll $PREFIX/bin
+ - cp /usr/x86_64-w64-mingw32/bin/zlib1.dll $PREFIX/bin
  - (cd $PREFIX; zip -0rq ../psp2-tools-$REV-x86_64-w64-mingw32.zip *)
 
 after_success:
