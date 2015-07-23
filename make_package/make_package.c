@@ -418,23 +418,23 @@ static int finalizePkg(pkg_t *pkg)
 	dataOff = namesOff + pkg->namesSize;
 
 	for (i = 0; i < pkg->hdr.itemCnt; i++) {
-		pkg->ents[i].nameOff = htobe32(namesOff + pkg->ents[i].nameOff);
-		pkg->ents[i].nameSize = htobe32(pkg->ents[i].nameSize);
-		pkg->ents[i].dataOff = htobe64(dataOff + pkg->ents[i].dataOff);
-		pkg->ents[i].dataSize = htobe64(pkg->ents[i].dataSize);
-		pkg->ents[i].type = htobe32(pkg->ents[i].type);
+		pkg->ents[i].nameOff = __builtin_bswap32(namesOff + pkg->ents[i].nameOff);
+		pkg->ents[i].nameSize = __builtin_bswap32(pkg->ents[i].nameSize);
+		pkg->ents[i].dataOff = __builtin_bswap64(dataOff + pkg->ents[i].dataOff);
+		pkg->ents[i].dataSize = __builtin_bswap64(pkg->ents[i].dataSize);
+		pkg->ents[i].type = __builtin_bswap32(pkg->ents[i].type);
 	}
 
-	pkg->hdr.magic = htobe32(pkg->hdr.magic);
-	pkg->hdr.stat = htobe16(pkg->hdr.stat);
-	pkg->hdr.type = htobe16(pkg->hdr.type);
-	pkg->hdr.infoOff = htobe32(pkg->hdr.infoOff);
-	pkg->hdr.infoCnt = htobe32(pkg->hdr.infoCnt);
-	pkg->hdr.hdrSize = htobe32(pkg->hdr.hdrSize);
-	pkg->hdr.itemCnt = htobe32(pkg->hdr.itemCnt);
-	pkg->hdr.totalSize = htobe64(pkg->hdr.totalSize);
-	pkg->hdr.bodyOff = htobe64(pkg->hdr.bodyOff);
-	pkg->hdr.bodySize = htobe64(pkg->hdr.bodySize);
+	pkg->hdr.magic = __builtin_bswap32(pkg->hdr.magic);
+	pkg->hdr.stat = __builtin_bswap16(pkg->hdr.stat);
+	pkg->hdr.type = __builtin_bswap16(pkg->hdr.type);
+	pkg->hdr.infoOff = __builtin_bswap32(pkg->hdr.infoOff);
+	pkg->hdr.infoCnt = __builtin_bswap32(pkg->hdr.infoCnt);
+	pkg->hdr.hdrSize = __builtin_bswap32(pkg->hdr.hdrSize);
+	pkg->hdr.itemCnt = __builtin_bswap32(pkg->hdr.itemCnt);
+	pkg->hdr.totalSize = __builtin_bswap64(pkg->hdr.totalSize);
+	pkg->hdr.bodyOff = __builtin_bswap64(pkg->hdr.bodyOff);
+	pkg->hdr.bodySize = __builtin_bswap64(pkg->hdr.bodySize);
 
 	memset(pkg->hdr.hdrCmac, 0, sizeof(pkg->hdr.hdrCmac));
 	memset(pkg->hdr.hdrSig, 0, sizeof(pkg->hdr.hdrSig));
@@ -530,7 +530,7 @@ static int writePkg(pkg_t *pkg)
 	((uint64_t *)ikey)[6] = 0;
 	((uint64_t *)ikey)[7] = 0;
 
-	itemCnt = be32toh(pkg->hdr.itemCnt);
+	itemCnt = __builtin_bswap32(pkg->hdr.itemCnt);
 	entSize = itemCnt * sizeof(pkgEnt_t);
 	bufSize = entSize + pkg->namesSize;
 	buf = malloc(bufSize);
@@ -545,15 +545,15 @@ static int writePkg(pkg_t *pkg)
 
 	offset = bufSize;
 	for (i = 0; i < itemCnt; i++) {
-		if (be32toh(pkg->ents[i].type) == PKG_ENT_TYPE_DIR)
+		if (__builtin_bswap32(pkg->ents[i].type) == PKG_ENT_TYPE_DIR)
 			continue;
 
-		srcPath = pkg->names + be32toh(pkg->ents[i].nameOff) - entSize;
-		srcPathEnd = srcPath + be32toh(pkg->ents[i].nameSize);
+		srcPath = pkg->names + __builtin_bswap32(pkg->ents[i].nameOff) - entSize;
+		srcPathEnd = srcPath + __builtin_bswap32(pkg->ents[i].nameSize);
 		ch = *srcPathEnd;
 		*srcPathEnd = 0;
 
-		gap = be64toh(pkg->ents[i].dataOff) - offset;
+		gap = __builtin_bswap64(pkg->ents[i].dataOff) - offset;
 		if (gap) {
 			memset(buf, 0, gap);
 			encrypt(buf, buf, gap, ikey);
@@ -576,11 +576,11 @@ static int writePkg(pkg_t *pkg)
 		if (fclose(src))
 			goto srcFail;
 
-		offset += gap + be64toh(pkg->ents[i].dataSize);
+		offset += gap + __builtin_bswap64(pkg->ents[i].dataSize);
 		*srcPathEnd = ch;
 	}
 
-	gap = be64toh(pkg->hdr.bodySize) - offset;
+	gap = __builtin_bswap64(pkg->hdr.bodySize) - offset;
 	if (gap) {
 		memset(buf, 0, gap);
 		encrypt(buf, buf, gap, ikey);
