@@ -10,8 +10,10 @@ sudo: required
 before_install:
  - set -e
 
+ - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
  - sudo add-apt-repository -y ppa:win-cross-dev/win-cross
  - sudo apt-get update -qq -y
+ - sudo apt-get upgrade -qq -y
  - sudo apt-get install -qq -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 libssl-dev libxml2-dev mingw64-openssl mingw64-libxml2
 
 script:
