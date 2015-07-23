@@ -4,4 +4,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SUBDIRS = psp2-fixup make_package sfx2sfo
+bin_PROGRAMS = make_package
+make_package_SOURCES = make_package.c
