@@ -13,7 +13,7 @@ before_install:
  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
  - sudo add-apt-repository -y ppa:win-cross-dev/win-cross
  - sudo apt-get update -qq -y
- - sudo apt-get install -qq -y gcc gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 libssl-dev libxml2-dev mingw64-openssl mingw64-libxml2
+ - sudo apt-get install -qq -y gcc-5 gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 libssl-dev libxml2-dev mingw64-openssl mingw64-libxml2
 
 script:
  - export REV=$(git describe --always)
@@ -22,7 +22,7 @@ script:
  - automake --add-missing
  - autoconf
 
- - ./configure $FLAGS CFLAGS=-I/usr/include/libxml2
+ - ./configure $FLAGS CC=gcc-5 CFLAGS=-I/usr/include/libxml2
  - make install -j4
  - make clean
  - (cd $PREFIX; tar -c * -f ../psp2-tools-$REV-amd64-pc-linux-gnu.tar)
