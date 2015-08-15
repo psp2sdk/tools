@@ -446,8 +446,13 @@ static int finalizePkg(pkg_t *pkg)
 	}
 
 	pkg->hdr.magic = __builtin_bswap32(pkg->hdr.magic);
+#if __GNUC__ > 4 || (__GNUC__ >= 4 && __GNUC_MINOR__ >= 8)
 	pkg->hdr.stat = __builtin_bswap16(pkg->hdr.stat);
 	pkg->hdr.type = __builtin_bswap16(pkg->hdr.type);
+#else
+	pkg->hdr.stat = (uint16_t)__builtin_bswap32(pkg->hdr.stat);
+	pkg->hdr.type = (uint16_t)__builtin_bswap32(pkg->hdr.type);
+#endif
 	pkg->hdr.infoOff = __builtin_bswap32(pkg->hdr.infoOff);
 	pkg->hdr.infoCnt = __builtin_bswap32(pkg->hdr.infoCnt);
 	pkg->hdr.hdrSize = __builtin_bswap32(pkg->hdr.hdrSize);
