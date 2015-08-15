@@ -37,8 +37,8 @@ script:
  - (cd $PREFIX; zip -0rq ../psp2-tools-$REV-x86_64-w64-mingw32.zip *)
 
 after_success:
- - curl -q -T psp2-tools-$REV-amd64-pc-linux-gnu.tar -u $FTP ftp://wololo.net/
- - curl -q -T psp2-tools-$REV-x86_64-w64-mingw32.zip -u $FTP ftp://wololo.net/
+ - curl -q -T psp2-tools-$REV-amd64-pc-linux-gnu.tar -u $FTP ftp://176.31.100.204/
+ - curl -q -T psp2-tools-$REV-x86_64-w64-mingw32.zip -u $FTP ftp://176.31.100.204/
 
 env:
  global:
