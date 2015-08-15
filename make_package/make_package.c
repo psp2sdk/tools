@@ -9,6 +9,10 @@
 #include <openssl/err.h>
 #include <openssl/sha.h>
 #include <sys/types.h>
+#ifdef __MINGW32__
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 #include <dirent.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -192,7 +196,11 @@ static int buildPkgHdr(pkgHdr_t *hdr, const char *conf)
 			}
 
 			for (i = 0; i < sizeof(hdr->dataRiv); i++) {
+#ifdef __MINGW32__
+				res = __mingw_fscanf(fp, "%2hhx", hdr->dataRiv + i);
+#else
 				res = fscanf(fp, "%2hhx", hdr->dataRiv + i);
+#endif
 				if (res == 0) {
 						fprintf(stderr, "%s: invalid hexadecimal for Klicensee\n",
 							conf);
@@ -237,9 +245,12 @@ static int resolveDirEnts(pkg_t *pkg, SHA_CTX *c,
 	DIR *dirp;
 	FILE *fp;
 	struct dirent *ent;
+#ifdef __MINGW32__
+	struct stat sb;
+#endif
 	size_t read;
 	int res;
-	char *src;
+	char *src, *name;
 	long size;
 	pkgEnt_t *pkgEnt;
 
@@ -294,7 +305,16 @@ static int resolveDirEnts(pkg_t *pkg, SHA_CTX *c,
 				break;
 		}
 
-		if (ent->d_type == DT_DIR) {
+		name = pkg->names + pkgEnt->nameOff;
+#ifdef __MINGW32__
+		if (stat(name, &sb))
+			continue;
+
+		if (S_ISDIR(sb.st_mode))
+#else
+		if (ent->d_type == DT_DIR)
+#endif
+		{
 			pkgEnt->dataOff = 0;
 			pkgEnt->dataSize = 0;
 			pkgEnt->type = PKG_ENT_TYPE_DIR;
@@ -302,7 +322,7 @@ static int resolveDirEnts(pkg_t *pkg, SHA_CTX *c,
 			pkg->hdr.itemCnt++;
 
 			res = resolveDirEnts(pkg, c,
-				pkg->names + pkgEnt->nameOff, pkgEnt->nameSize);
+				name, pkgEnt->nameSize);
 			if (res) {
 				closedir(dirp);
 				return res;
@@ -310,7 +330,7 @@ static int resolveDirEnts(pkg_t *pkg, SHA_CTX *c,
 		} else {
 			pkg->ents[pkg->hdr.itemCnt].dataOff = pkg->hdr.bodySize;
 
-			fp = fopen(pkg->names + pkgEnt->nameOff, "rb");
+			fp = fopen(name, "rb");
 			if (fp == NULL)
 				goto stdFail;
 
