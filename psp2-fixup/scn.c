@@ -139,14 +139,36 @@ int getSceScns(sceScns_t *sceScns, scn_t *scns, Elf32_Half shnum,
 	sceScns->relFstub = findScnByName(scns, shnum, strtab,
 		".rel.sceFStub.rodata", NULL);
 
-	sceScns->fstub = sceScns->relFstub == NULL ?
-		NULL : scns + sceScns->relFstub->shdr.sh_info;
+	if (sceScns->relFstub == NULL
+		&& (sceScns->relFstub->shdr.sh_info <= 0
+			|| sceScns->relFstub->shdr.sh_info >= shnum))
+	{
+		sceScns->fstub = NULL;
+	} else {
+		sceScns->fstub = scns + sceScns->relFstub->shdr.sh_info;
+		if (strcmp(strtab + sceScns->fstub->shdr.sh_name,
+			".sceFStub.rodata"))
+		{
+			sceScns->fstub = NULL;
+		}
+	}
 
 	sceScns->relVstub = findScnByName(scns, shnum, strtab,
 		".rel.sceVStub.rodata", NULL);
 
-	sceScns->vstub = sceScns->relVstub == NULL ?
-		NULL : scns + sceScns->relVstub->shdr.sh_info;
+	if (sceScns->relVstub == NULL
+		&& (sceScns->relVstub->shdr.sh_info <= 0
+			|| sceScns->relVstub->shdr.sh_info >= shnum))
+	{
+		sceScns->vstub = NULL;
+	} else {
+		sceScns->vstub = scns + sceScns->relVstub->shdr.sh_info;
+		if (strcmp(strtab + sceScns->vstub->shdr.sh_name,
+			".sceVStub.rodata"))
+		{
+			sceScns->vstub = NULL;
+		}
+	}
 
 	sceScns->fnid = findScnByName(scns, shnum, strtab,
 		".sceFNID.rodata", NULL);
