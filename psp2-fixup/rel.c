@@ -167,7 +167,7 @@ int relocate(FILE *fp, scn_t *scns,
 	Elf32_Rel *rel;
 	scn_t *scn, *dstScn;
 	Elf32_Section st_shndx;
-	Elf32_Word i;
+	Elf32_Word i, type;
 	int res;
 
 	if (fp == NULL || scns == NULL || symtab == NULL || relScns == NULL)
@@ -203,6 +203,7 @@ int relocate(FILE *fp, scn_t *scns,
 		rel = scn->content;
 		for (i = 0; i < scn->orgSize; i += sizeof(*rel)) {
 			st_shndx = symtab[ELF32_R_SYM(rel->r_info)].st_shndx;
+			type = ELF32_R_TYPE(rel->r_info);
 
 			if (dstScn->content == NULL) {
 				res = loadScn(fp, dstScn, strtab + dstScn->shdr.sh_name);
@@ -213,8 +214,13 @@ int relocate(FILE *fp, scn_t *scns,
 			cur->r_offset = rel->r_offset;
 			cur->r_info = rel->r_info;
 			cur->r_addend = getAddend(dstScn, rel);
-			if (st_shndx < SHN_LORESERVE)
+			if (st_shndx < SHN_LORESERVE &&
+				(type == R_ARM_ABS32 || type == R_ARM_TARGET1
+				|| type == R_ARM_MOVW_ABS_NC || type == R_ARM_MOVT_ABS
+				|| type == R_ARM_THM_MOVW_ABS_NC || type == R_ARM_THM_MOVT_ABS))
+			{
 				cur->r_addend += scns[st_shndx].addrDiff;
+			}
 
 			rel++;
 			cur++;
