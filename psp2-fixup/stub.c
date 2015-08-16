@@ -177,8 +177,12 @@ int updateStubs(sceScns_t *sceScns, FILE *fp,
 			stubHeads->ver = 1;
 			stubHeads->flags = 0;
 			stubHeads->nid = p->head.nid;
+			stubHeads->unused0 = 0;
+			stubHeads->unused1 = 0;
 
 			// Resolve name
+			stubHeads->name = 0;
+
 			rel = findRelByOffset(sceScns->relMark,
 				sceScns->mark->shdr.sh_addr + offset
 					+ offsetof(sce_libgen_mark_head, name),
@@ -204,6 +208,8 @@ int updateStubs(sceScns_t *sceScns, FILE *fp,
 
 			relaStubEnt++;
 
+			stubHeads->funcNids = 0;
+			stubHeads->funcStubs = 0;
 			if (impFunc) {
 				// Resolve function NID table
 				PSP2_R_SET_SHORT(relaStubEnt, 0);
@@ -224,11 +230,10 @@ int updateStubs(sceScns_t *sceScns, FILE *fp,
 					+ offsetof(sceLib_stub, funcStubs));
 				PSP2_R_SET_ADDEND(relaStubEnt, fstubOffset);
 				relaStubEnt++;
-			} else {
-				stubHeads->funcNids = 0;
-				stubHeads->funcStubs = 0;
 			}
 
+			stubHeads->varNids = 0;
+			stubHeads->varStubs = 0;
 			if (impVar) {
 				// Resolve variable NID table
 				PSP2_R_SET_SHORT(relaStubEnt, 0);
@@ -249,9 +254,6 @@ int updateStubs(sceScns_t *sceScns, FILE *fp,
 					+ offsetof(sceLib_stub, varStubs));
 				PSP2_R_SET_ADDEND(relaStubEnt, vstubOffset);
 				relaStubEnt++;
-			} else {
-				stubHeads->varNids = 0;
-				stubHeads->varStubs = 0;
 			}
 
 			// TODO: Support other types
