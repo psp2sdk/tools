@@ -271,7 +271,8 @@ int convRelaToPsp2Rela(scn_t *scns, seg_t *segs, const Elf32_Sym *symtab,
 			sym = symtab + ELF32_R_SYM(rela->r_info);
 
 			PSP2_R_SET_SHORT(cur, 0);
-			PSP2_R_SET_TYPE(cur, type);
+			PSP2_R_SET_TYPE(cur, type == R_ARM_THM_JUMP24 ?
+				R_ARM_THM_PC22 : type);
 			PSP2_R_SET_DATSEG(cur, dstScn->phndx);
 			PSP2_R_SET_OFFSET(cur, rela->r_offset
 				- segs[dstScn->phndx].phdr.p_vaddr);
