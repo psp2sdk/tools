@@ -21,6 +21,8 @@ Elf32_Rel *findRelByOffset(const scn_t *scn, Elf32_Addr offset,
 Elf32_Rela *findRelaByOffset(const scn_t *scn, Elf32_Addr offset,
 	const char *strtab);
 
+Elf32_Word getAddend(const scn_t *scn, const Elf32_Rel *rel);
+
 // Loads rel and saves as rela
 int relocate(FILE *fp, scn_t *scns,
 	const char *strtab, const Elf32_Sym *symtab,
