@@ -19,21 +19,21 @@
 #include "seg.h"
 
 int findSyslib(syslib_t *syslib, FILE *fp, scn_t *scns, Elf32_Half shnum,
-	const seg_t *segs, const seg_t *rela,
+	const seg_t *segs, const seg_t *relaSeg,
 	const char *strtab, const Elf32_Sym *symtab,
-	scn_t *ent, const scn_t *relEnt)
+	scn_t *ent, const scn_t *relaEnt)
 {
-	const Elf32_Rel *rel;
+	const Elf32_Rela *rela;
 	const Elf32_Sym *sym;
 	const Elf32_Word *nids;
-	Elf32_Word i, stubOffset, type, *p;
-	const scn_t *stubRel;
+	Elf32_Word i, ptrsOffset, *p;
+	const scn_t *ptrsRela;
 	scn_t *scn;
 	int res;
 
 	if (syslib == NULL || fp == NULL || scns == NULL || segs == NULL
-		|| rela == NULL || strtab == NULL || symtab == NULL
-		|| ent == NULL || relEnt == NULL || relEnt->content == NULL)
+		|| relaSeg == NULL || strtab == NULL || symtab == NULL
+		|| ent == NULL || relaEnt == NULL || relaEnt->content == NULL)
 	{
 		return EINVAL;
 	}
@@ -44,49 +44,41 @@ int findSyslib(syslib_t *syslib, FILE *fp, scn_t *scns, Elf32_Half shnum,
 			return res;
 	}
 
-	// Stub Table
-	rel = findRelByOffset(relEnt, ent->shdr.sh_addr + 28, strtab);
-	if (rel == NULL)
+	// Pointer Table
+	rela = findRelaByOffset(relaEnt, ent->shdr.sh_addr + 28, strtab);
+	if (rela == NULL)
 		return errno;
 
-	sym = symtab + ELF32_R_SYM(rel->r_info);
+	sym = symtab + ELF32_R_SYM(rela->r_info);
 	scn = scns + sym->st_shndx;
-	type = ELF32_R_TYPE(rel->r_info);
-	stubOffset = (type == R_ARM_ABS32 || type == R_ARM_TARGET1 ?
-		*(Elf32_Word *)((uintptr_t)ent->content + 28) : sym->st_value)
-		- segs[scn->phndx].phdr.p_vaddr;
+	ptrsOffset = rela->r_addend - segs[scn->phndx].phdr.p_vaddr;
 
 	i = 0;
 	do {
-		if (i >= rela->shnum) {
+		if (i >= relaSeg->shnum) {
 			fprintf(stderr, "%s: Relocation table not found\n",
 				strtab + scn->shdr.sh_name);
 			return EILSEQ;
 		}
 
-		stubRel = rela->scns[i];
+		ptrsRela = relaSeg->scns[i];
 		i++;
-	} while (stubRel->shdr.sh_info != sym->st_shndx);
+	} while (ptrsRela->shdr.sh_info != sym->st_shndx);
 
 	// NID Table
-	rel = findRelByOffset(relEnt, ent->segOffset + 24, strtab);
-	if (rel == NULL)
+	rela = findRelaByOffset(relaEnt, ent->segOffset + 24, strtab);
+	if (rela == NULL)
 		return errno;
 
-	sym = symtab + ELF32_R_SYM(rel->r_info);
-	scn = scns + sym->st_shndx;
-
+	scn = scns + symtab[ELF32_R_SYM(rela->r_info)].st_shndx;
 	if (scn->content == NULL) {
 		res = loadScn(fp, scn, strtab + scn->shdr.sh_name);
 		if (res)
 			return res;
 	}
 
-	type = ELF32_R_TYPE(rel->r_info);
 	nids = (void *)((uintptr_t)scn->content
-		+ (type == R_ARM_ABS32 || type == R_ARM_TARGET1 ?
-			*(Elf32_Word *)((uintptr_t)ent->content + 24) : sym->st_value)
-		- scn->shdr.sh_addr);
+		+ rela->r_addend - scn->shdr.sh_addr);
 
 	// Resolve
 	syslib->start = 0;
@@ -99,11 +91,11 @@ int findSyslib(syslib_t *syslib, FILE *fp, scn_t *scns, Elf32_Half shnum,
 		else
 			continue;
 
-		rel = findRelByOffset(stubRel, stubOffset + i * 4, strtab);
-		if (rel == NULL)
+		rela = findRelaByOffset(ptrsRela, ptrsOffset + i * 4, strtab);
+		if (rela == NULL)
 			return errno;
 
-		*p = symtab[ELF32_R_SYM(rel->r_info)].st_value;
+		*p = symtab[ELF32_R_SYM(rela->r_info)].st_value;
 	}
 
 	return 0;

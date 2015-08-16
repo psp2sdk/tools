@@ -18,11 +18,15 @@
 Elf32_Rel *findRelByOffset(const scn_t *scn, Elf32_Addr offset,
 	const char *strtab);
 
-int updateRel(FILE *fp, scn_t *scns,
+Elf32_Rela *findRelaByOffset(const scn_t *scn, Elf32_Addr offset,
+	const char *strtab);
+
+// Loads rel and saves as rela
+int relocate(FILE *fp, scn_t *scns,
 	const char *strtab, const Elf32_Sym *symtab,
 	scn_t **relScns, Elf32_Half relShnum);
 
-int convRelToRela(scn_t *scns, seg_t *segs, const Elf32_Sym *symtab,
-	scn_t **relScns, Elf32_Half relShnum);
+int convRelaToPsp2Rela(scn_t *scns, seg_t *segs, const Elf32_Sym *symtab,
+	scn_t **relaScns, Elf32_Half relaShnum);
 
 #endif

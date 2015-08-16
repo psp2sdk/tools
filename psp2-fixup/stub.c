@@ -24,6 +24,7 @@ static int addStub(Psp2_Rela *relaStub, const scn_t *stub,
 {
 	const Elf32_Rel *rel;
 	const Elf32_Sym *sym;
+	const scn_t *symscn;
 	Elf32_Word type;
 	Elf32_Half symseg;
 	Elf32_Addr addend;
@@ -43,7 +44,8 @@ static int addStub(Psp2_Rela *relaStub, const scn_t *stub,
 
 	type = ELF32_R_TYPE(rel->r_info);
 	sym = symtab + ELF32_R_SYM(rel->r_info);
-	symseg = scns[sym->st_shndx].phndx;
+	symscn = scns + sym->st_shndx;
+	symseg = symscn->phndx;
 
 	PSP2_R_SET_SHORT(relaStub, 0);
 	PSP2_R_SET_SYMSEG(relaStub, symseg);
@@ -60,8 +62,8 @@ static int addStub(Psp2_Rela *relaStub, const scn_t *stub,
 	} else
 		addend = sym->st_value;
 
-	addend -= segs[symseg].phdr.p_vaddr;
-	PSP2_R_SET_ADDEND(relaStub, addend);
+	PSP2_R_SET_ADDEND(relaStub, addend + symscn->addrDiff
+		- segs[symseg].phdr.p_vaddr);
 
 	*fnid = stubMark->nid;
 
@@ -204,6 +206,7 @@ int updateStubs(sceScns_t *sceScns, FILE *fp,
 			PSP2_R_SET_ADDEND(relaStubEnt,
 				(type == R_ARM_ABS32 || type == R_ARM_TARGET1 ?
 					sym->st_value : p->head.name)
+				+ scns[sym->st_shndx].addrDiff
 				- segs[symseg].phdr.p_vaddr);
 
 			relaStubEnt++;
@@ -279,6 +282,7 @@ int updateStubs(sceScns_t *sceScns, FILE *fp,
 				} else
 					addend = sym->st_value;
 
+				addend += scns[sym->st_shndx].addrDiff;
 				if (addend != sceScns->mark->shdr.sh_addr + offset)
 					goto cont;
 

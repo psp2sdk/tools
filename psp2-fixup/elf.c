@@ -142,25 +142,6 @@ static int updateEhdr(Elf32_Ehdr *ehdr, const char *path,
 	return 0;
 }
 
-static int updateSymtab(Elf32_Sym *symtab, Elf32_Word size, scn_t *scns)
-{
-	if (symtab == NULL || scns == NULL)
-		return EINVAL;
-
-	while (size) {
-		if (symtab->st_shndx != SHN_UNDEF
-			&& symtab->st_shndx < SHN_LORESERVE)
-		{
-			symtab->st_value += scns[symtab->st_shndx].addrDiff;
-		}
-
-		symtab++;
-		size -= sizeof(Elf32_Sym);
-	}
-
-	return 0;
-}
-
 int updateElf(elf_t *elf)
 {
 	syslib_t syslib;
@@ -177,12 +158,7 @@ int updateElf(elf_t *elf)
 	if (res)
 		return res;
 
-	res = updateSymtab(elf->symtab->content, elf->symtab->orgSize,
-		elf->scns);
-	if (res)
-		return res;
-
-	res = updateRel(elf->fp, elf->scns,
+	res = relocate(elf->fp, elf->scns,
 		elf->strtab->content, elf->symtab->content,
 		elf->rela->scns, elf->rela->shnum);
 	if (res)
@@ -199,7 +175,7 @@ int updateElf(elf_t *elf)
 	if (res)
 		return res;
 
-	res = convRelToRela(elf->scns, elf->segs, elf->symtab->content,
+	res = convRelaToPsp2Rela(elf->scns, elf->segs, elf->symtab->content,
 		elf->rela->scns, elf->rela->shnum);
 	if (res)
 		return res;
