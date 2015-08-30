@@ -25,11 +25,13 @@ script:
  - ./configure $FLAGS CC=gcc-5 CFLAGS=-I/usr/include/libxml2
  - make install -j4
  - make clean
+ - cp COPYING.TXT $PREFIX
  - (cd $PREFIX; tar -c * -f ../psp2-tools-$REV-amd64-pc-linux-gnu.tar)
  - rm -Rf $PREFIX
 
  - ./configure $FLAGS --host=x86_64-w64-mingw32 CFLAGS=-I/usr/x86_64-w64-mingw32/include/libxml2
  - make install -j4
+ - cp COPYING.TXT $PREFIX
  - cp /usr/x86_64-w64-mingw32/bin/libeay32.dll $PREFIX/bin
  - cp /usr/x86_64-w64-mingw32/bin/libxml2-2.dll $PREFIX/bin
  - cp /usr/x86_64-w64-mingw32/bin/libiconv-2.dll $PREFIX/bin
