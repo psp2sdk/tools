@@ -304,7 +304,7 @@ int updateSegs(seg_t *segs, Elf32_Half segnum, const char *strtab)
 	}
 
 	addr = sorts[0]->phdr.p_paddr;
-	for (i = 1; i < loadNum; i++) {
+	for (i = 0; i < loadNum; i++) {
 		and = sorts[i]->phdr.p_align - 1;
 		if (addr & and)
 			addr = (addr & ~and) + sorts[i]->phdr.p_align;
