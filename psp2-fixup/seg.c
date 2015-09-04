@@ -327,9 +327,11 @@ int updateSegs(seg_t *segs, Elf32_Half segnum, const char *strtab)
 
 	offset = sizeof(Elf32_Ehdr) + sizeof(Elf32_Phdr) * segnum;
 	for (i = 0; i < segnum; i++) {
-		and = sorts[i]->phdr.p_align - 1;
-		if (offset & and)
-			offset = (offset & ~and) + sorts[i]->phdr.p_align;
+		if (sorts[i]->phdr.p_align > 0) {
+			and = sorts[i]->phdr.p_align - 1;
+			if (offset & and)
+				offset = (offset & ~and) + sorts[i]->phdr.p_align;
+		}
 
 		sorts[i]->phdr.p_offset = offset;
 
