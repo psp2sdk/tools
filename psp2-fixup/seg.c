@@ -15,20 +15,18 @@
 #include "seg.h"
 
 static int mapOverScnSeg(void (* f)(scn_t *, seg_t *, Elf32_Half),
-	scn_t *scns, seg_t *segs, const Elf32_Ehdr *ehdr,
-	Elf32_Half relaNdx, const scn_t *relMark)
+	scn_t *scns, seg_t *segs, const Elf32_Ehdr *ehdr, Elf32_Half relaNdx)
 {
 	Elf32_Half i, j;
 	Elf32_Phdr *phdr;
 	Elf32_Shdr *shdr;
 
-	if (f == NULL || scns == NULL || segs == NULL
-		|| ehdr == NULL || relMark == NULL)
+	if (f == NULL || scns == NULL || segs == NULL || ehdr == NULL)
 	{
 		return EINVAL;
 	}
 
-	for (i = 0; i < ehdr->e_shnum; i++) {
+	for (i = 1; i < ehdr->e_shnum; i++) {
 		shdr = &scns[i].shdr;
 
 		if (shdr->sh_type == SHT_REL) {
@@ -71,14 +69,14 @@ static void segCntMapScns(scn_t *scn, seg_t *seg, Elf32_Half index)
 
 /* Load phdrs and scns included in the sections. scns will be sorted. */
 seg_t *getSegs(FILE *fp, const char *path, Elf32_Ehdr *ehdr,
-	scn_t *scns, seg_t **rela, const scn_t *relMark)
+	scn_t *scns, seg_t **rela)
 {
 	Elf32_Half i, j, k, relaPhndx;
 	scn_t *tmp;
 	seg_t *segs;
 
 	if (fp == NULL || path == NULL || ehdr == NULL
-		|| scns == NULL || rela == NULL || relMark == NULL)
+		|| scns == NULL || rela == NULL)
 	{
 		return NULL;
 	}
@@ -131,7 +129,7 @@ seg_t *getSegs(FILE *fp, const char *path, Elf32_Ehdr *ehdr,
 
 	*rela = segs + relaPhndx;
 
-	mapOverScnSeg(segCntScns, scns, segs, ehdr, relaPhndx, relMark);
+	mapOverScnSeg(segCntScns, scns, segs, ehdr, relaPhndx);
 
 	for (i = 0; i < ehdr->e_phnum; i++) {
 		segs[i].scns = malloc(segs[i].shnum * sizeof(scn_t));
@@ -150,7 +148,7 @@ seg_t *getSegs(FILE *fp, const char *path, Elf32_Ehdr *ehdr,
 		segs[i].shnum = 0;
 	}
 
-	mapOverScnSeg(segCntMapScns, scns, segs, ehdr, relaPhndx, relMark);
+	mapOverScnSeg(segCntMapScns, scns, segs, ehdr, relaPhndx);
 
 	for (i = 0; i < ehdr->e_phnum; i++) {
 		if (segs[i].phdr.p_type != PT_LOAD)

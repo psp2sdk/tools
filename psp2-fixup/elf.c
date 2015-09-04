@@ -88,8 +88,7 @@ int openElf(elf_t *dst, const char *path)
 		return res;
 	}
 
-	dst->segs = getSegs(dst->fp, path, &dst->ehdr,
-		dst->scns, &dst->rela, dst->sceScns.relMark);
+	dst->segs = getSegs(dst->fp, path, &dst->ehdr, dst->scns, &dst->rela);
 	if (dst->segs == NULL) {
 		free(dst->scns);
 		free(dst->strtab->content);
