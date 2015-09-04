@@ -242,12 +242,14 @@ int updateSegs(seg_t *segs, Elf32_Half segnum, const char *strtab)
 		for (j = 0; j < sorts[i]->shnum; j++) {
 			scn = sorts[i]->scns[j];
 
-			gap = addr & (scn->shdr.sh_addralign - 1);
-			if (gap) {
-				gap = scn->shdr.sh_addralign - gap;
-				addr += gap;
-				sorts[i]->phdr.p_filesz += gap;
-				sorts[i]->phdr.p_memsz += gap;
+			if (scn->shdr.sh_addralign > 0) {
+				gap = addr & (scn->shdr.sh_addralign - 1);
+				if (gap) {
+					gap = scn->shdr.sh_addralign - gap;
+					addr += gap;
+					sorts[i]->phdr.p_filesz += gap;
+					sorts[i]->phdr.p_memsz += gap;
+				}
 			}
 
 			scn->addrDiff = addr - scn->shdr.sh_addr;
