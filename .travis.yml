@@ -15,35 +15,42 @@ before_install:
  - sudo apt-get update -qq -y
  - sudo apt-get install -qq -y gcc-5 gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 libssl-dev libxml2-dev mingw64-openssl mingw64-libxml2
 
+ - git clone -q "https://$TOKEN@github.com/psp2sdk/psp2sdk.git" $DIST | sed s/$TOKEN/\${TOKEN}/g
+
 script:
  - export REV=$(git describe --always)
+ - git -C $DIST config user.name "Travis CI"
+ - git -C $DIST config user.email contact@travis-ci.com
 
  - aclocal
  - automake --add-missing
  - autoconf
 
+ - git -C $DIST checkout amd64-pc-linux-gnu
+ - git -C $DIST rm -qrf psp2sdk
  - ./configure $FLAGS CC=gcc-5 CFLAGS=-I/usr/include/libxml2
  - make install -j4
  - make clean
- - cp COPYING.TXT $PREFIX
- - (cd $PREFIX; tar -c * -f ../psp2-tools-$REV-amd64-pc-linux-gnu.tar)
- - rm -Rf $PREFIX
+ - git -C $DIST add -f psp2sdk
+ - git -C $DIST commit -qam "tools $REV"
 
+ - git -C $DIST checkout x86_64-w64-mingw32
+ - git -C $DIST rm -qrf psp2sdk
  - ./configure $FLAGS --host=x86_64-w64-mingw32 CFLAGS=-I/usr/x86_64-w64-mingw32/include/libxml2
  - make install -j4
- - cp COPYING.TXT $PREFIX
  - cp /usr/x86_64-w64-mingw32/bin/libeay32.dll $PREFIX/bin
  - cp /usr/x86_64-w64-mingw32/bin/libxml2-2.dll $PREFIX/bin
  - cp /usr/x86_64-w64-mingw32/bin/libiconv-2.dll $PREFIX/bin
  - cp /usr/x86_64-w64-mingw32/bin/zlib1.dll $PREFIX/bin
- - (cd $PREFIX; zip -0rq ../psp2-tools-$REV-x86_64-w64-mingw32.zip *)
+ - git -C $DIST add -f psp2sdk
+ - git -C $DIST commit -qam "tools $REV"
 
 after_success:
- - curl -q -T psp2-tools-$REV-amd64-pc-linux-gnu.tar -u $FTP ftp://176.31.100.204/
- - curl -q -T psp2-tools-$REV-x86_64-w64-mingw32.zip -u $FTP ftp://176.31.100.204/
+ - git -C $DIST push -q origin | sed s/$TOKEN/\${TOKEN}/g
 
 env:
  global:
-  - PREFIX="$PWD/dist"
+  - DIST="$PWD/dist"
+  - PREFIX="$DIST/psp2sdk"
   - FLAGS="-q --prefix=$PREFIX"
-  - secure: "nNMKnoqKtCYgVJu4Wlp+k62q41G0RhCcEK2srDssFtEW5kSeThHttEJ7gTLUkd4jBNYQiFAfd8fg2oHfotgq7pxSqBP3B1iLgQMNvO/6IbvxwymWJuzVWl4t/7bagKWt/Tt2Tg5vvAWliFQwXJIq0uTJi1N/x4KQmGrRo8nfBaefBiBwQovOIYZIHokRrvDUv63DmkHeDdh2OGDDAjdoh4gWc/qrR63WMTyKst77ni4cBc4Z7+ElkxV7wVbTBigng+60F+1t3h/koPiQzljt7P4vK2OjLiU+bXEZXq9SoRA1IYE9HFByn7bDCc7iCnELHRWiN4oIuPSibsIJVjM/Aj6LVG3mEvHSu1u0mBluFwxlJkqJAAziHRIqEeV51bmTz8Y1DAIIf32hP4Bojn7Fj5UVW407dn/JQo/v+in2IqX5VJMNIBQsp1Deo2eU/SnjE5X2m1blDp0IFC4/lz1Zbnq9qb0/Nb9Tmb0dm1T12CZvUBu0IvQy/JTFUQ7xq/UM+MGddwxtqp1IkzgYqHbI+Zw/CpcoZmyfmzrJ65do7noIA+/KOhT09peV7Syta3yzIPXZ1jWZEbc1A9oviaFzDRyYJfmO8RYx2xW0hS/z2VONOWhR6NEaMJ+wxnjpG3BMMqRKKmmEHLuZ1/fKMLtyAj+Yzd0Sj5em6eh/blZ8+nw="
+  - secure: "V1D3N6iGEat/Gt7iBclpSHrve28gqdxspZPXQfJXIksXWpT/2tTU5sIeltnHelgumpP1uQWNOuknoN4UVDzc7tuK3glq9LFKDXGERY1FT48MtmadjXrcg684Unz+G70Pmgidhvs3qQCKsWmE1l1ZP+ghPQEH0424Rl6a5099eyTwDen8jdDJ65Kaj+RqQGsM3Hhr0mGbVz/lYh3pFiwK50h94yymLIxhtrRA3ccXCYzzpoYpveofrBQ1rd2b/t9ODMNikr48fXJ6xD9s0XgS8wMByvVh+jxuyz8V27+AxCHZXBs9snBulCY8r8iFDS+9705yClIHiZNFgH2XuBPIZ7l66Yp4WfCjegmJWZ3zeJRkuHEiANZF1XWAaznLCnskiBZNtkCjw7Tcm7amW+ES93T+lEMX2mVFzzYAkJr6BKjgo8vkvN6+tO34Rc3DzJA4QN4so/0UyTHi1HkeMNR2GKI2nHU+5LDubxJALlk3D1fP/U+7i8Pj7q0o6Qumv5mMc2y+GqUqteU8+oVIxqkRa1cz6ftFI92Ak0yS7qtgD0KbXo0NcpbqjEM2RzulHXvAlYuv88XZplUwkyycXh3jt3Jz0whCtpP9pbYSr32xFUZ9C53GaA9gfAG7PCsOGhEsshsdYw1mq7PwMvWw79LFBAl6kV8kayCXFs+f8QXVVR8="
