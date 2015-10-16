@@ -6,14 +6,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 sudo: required
+dist: trusty
 
 before_install:
  - set -e
 
- - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
- - sudo add-apt-repository -y ppa:win-cross-dev/win-cross
  - sudo apt-get update -qq -y
- - sudo apt-get install -qq -y gcc-5 gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 libssl-dev libxml2-dev mingw64-openssl mingw64-libxml2
+ - sudo apt-get install -qq -y gcc-mingw-w64-x86-64 libssl-dev libxml2-dev
+
+ - wget -q https://sourceforge.net/projects/mingw-w64/files/External%20binary%20packages%20%28Win64%20hosted%29/Binaries%20%2864-bit%29/OpenSSL-1.0.0a-bin-x64.zip
+ - sudo unzip -qq OpenSSL-1.0.0a-bin-x64.zip x86_64-w64-mingw32/* -d /usr
+
+ - git clone -q --single-branch -b v2.9.2 https://git.gnome.org/browse/libxml2
+ - cd libxml2
+ - ./autogen.sh -q --host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --without-lzma --without-python
+ - sudo make install -j4
+ - cd ..
 
  - git clone -q "https://$TOKEN@github.com/psp2sdk/psp2sdk.git" $DIST | sed s/$TOKEN/\${TOKEN}/g
 
@@ -28,7 +36,7 @@ script:
 
  - git -C $DIST checkout amd64-pc-linux-gnu
  - git -C $DIST rm -qrf psp2sdk
- - ./configure $FLAGS CC=gcc-5 CFLAGS=-I/usr/include/libxml2
+ - ./configure $FLAGS CFLAGS=-I/usr/include/libxml2
  - make install -j4
  - make clean
  - git -C $DIST add -f psp2sdk
@@ -38,10 +46,7 @@ script:
  - git -C $DIST rm -qrf psp2sdk
  - ./configure $FLAGS --host=x86_64-w64-mingw32 CFLAGS=-I/usr/x86_64-w64-mingw32/include/libxml2
  - make install -j4
- - cp /usr/x86_64-w64-mingw32/bin/libeay32.dll $PREFIX/bin
  - cp /usr/x86_64-w64-mingw32/bin/libxml2-2.dll $PREFIX/bin
- - cp /usr/x86_64-w64-mingw32/bin/libiconv-2.dll $PREFIX/bin
- - cp /usr/x86_64-w64-mingw32/bin/zlib1.dll $PREFIX/bin
  - git -C $DIST add -f psp2sdk
  - git -C $DIST commit -qam "tools $REV"
 
